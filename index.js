@@ -44,6 +44,7 @@ prototype.handler = function(request, response) {
 
 prototype.send = function(callback) {
   var listeners = this.listeners
+  var self = this
   Object.keys(listeners)
     .forEach(function(href) {
       var listener = listeners[href]
@@ -59,6 +60,13 @@ prototype.send = function(callback) {
         options,
         function() {
           // TODO retry
-          // TODO check failure
           return null })
+      request
+        .on('error', function(error) {
+          self.emit('failure', error)
+          self._deregister(href) })
       callback(request) }) }
+
+prototype._deregister = function(href) {
+  delete this.listeners[href]
+  this.emit('deregistration', href) }

@@ -1,20 +1,39 @@
+var HTTPCallback = require('./')
 var concat = require('concat-stream')
 var http = require('http')
-var HTTPCallback = require('./')
+var series = require('async-series')
 var tape = require('tape')
 var url = require('url')
 
 tape(function(test) {
-  test.plan(3)
+  test.plan(8)
   // The data to send from an event source server to an event listener server.
   var CALLBACK_DATA = 'callback body'
+  var BAD_CALLBACK_PORT = 1
+  var BAD_CALLBACK = ( 'http://localhost:' + BAD_CALLBACK_PORT + '/x' )
   // Create an event source server with an example HTTPCallback.
   var example = new HTTPCallback()
   example
-    .on('registration', function(parsedURL) {
+    .once('registration', function(parsedURL) {
       test.equal(
         parsedURL.pathname, '/receive',
-        'callback emits registration event') })
+        'emits registration event for good callback')
+      this
+        .once('registration', function(parsedURL) {
+          test.equal(
+            parsedURL.pathname, '/x',
+            'emits registration event for bad callback') }) })
+    .on('failure', function(error) {
+      test.equal(
+        error.errno, 'ECONNREFUSED',
+        'emits failure event for bad callback')
+      test.equal(
+        error.port, BAD_CALLBACK_PORT,
+        'failure event is for the bad port') })
+    .on('deregistration', function(href) {
+      test.equal(
+        href, BAD_CALLBACK,
+        'deregistration event for bad callback') })
   var source = http.createServer(
     function(request, response) {
       // The event source server proxies POST /register to the
@@ -62,18 +81,31 @@ tape(function(test) {
             port: sourcePort,
             path: '/register',
             method: 'POST' }
-          // The body of the callback registration request to the event source
-          // server is just the plain-text URL of the source listener server
-          // where the event source server should POST data.
-          var callbackURI = ( 'http://localhost:' + listenerPort + '/receive' )
-          http.request(
-            post,
-            function(response) {
-              test.equal(
-                response.statusCode, 201,
-                'POST /register to source responds 201')
-              // Dispatch the callback data to all listeners registered with
-              // the event source server.
-              example.send(function(stream) {
-                stream.end(CALLBACK_DATA) }) })
-            .end(callbackURI) }) }) })
+          series(
+            [ function(done) {
+                http.request(post, function(response) {
+                  test.equal(
+                    response.statusCode, 201,
+                    'POST /register to source responds 201 for good callback')
+                  done() })
+                .on('error', done)
+                // The body of the callback registration request to the event
+                // source server is the plain-text URL of the source listener
+                // server where the event source server should POST data.
+                .end('http://localhost:' + listenerPort + '/receive') },
+              function(done) {
+                http.request(post, function(response) {
+                  test.equal(
+                    response.statusCode, 201,
+                    'POST /register to source responds 201 for bad callback')
+                  done() })
+                .on('error', done)
+                // Register a bogus callback as well, to test error and
+                // deregistration events.
+                .end(BAD_CALLBACK) },
+              function() {
+                // Dispatch the callback data to all listeners registered with
+                // the event source server.
+                example.send(function(stream) {
+                  stream.end(CALLBACK_DATA) }) } ],
+            test.ifError.bind(test)) }) }) })
