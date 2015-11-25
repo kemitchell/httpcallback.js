@@ -10,14 +10,16 @@ var url = require('url')
 
 function HTTPCallback(options) {
   options = ( options || {} )
-  // Options passed to `retry.optionation()` for each attempt to call back to
-  // registered HTTP endpoint. Endpoints that fail after retries are
-  // deregistered.
-  this.retryOptions =  ( 'retry' in options ? options.retry : { } )
-  // A map from string from `url.parse(value).href` to object from
+  // Private object containing options passed to `retry.optionation()` for each
+  // attempt to call back to registered HTTP endpoint. Endpoints that fail
+  // after retries are deregistered.
+  this._retryOptions =  ( 'retry' in options ? options.retry : { } )
+
+  // Private object map from string from `url.parse(value).href` to object from
   // `url.parse(value)` describing HTTP endpoints registered for callbacks.
-  this.listeners = { }
-  // This is an EventEmitter.
+  this._listeners = { }
+
+  // HTTPCallbacks are EventEmitters.
   EventEmitter.call(this) }
 
 inherits(HTTPCallback, EventEmitter)
@@ -34,7 +36,7 @@ prototype.handler = function(request, response) {
     var href = parsedURL.href
     if (validBody(parsedURL)) {
       // Store the provided callback.
-      self.listeners[href] = parsedURL
+      self._listeners[href] = parsedURL
       // Respond 201
       response.statusCode = 201
       response.end()
@@ -77,7 +79,7 @@ prototype._sendDataToListener = function(dataCallback, listener, errback) {
   var self = this
   var useHTTPS = ( listener.protocol === 'https:' )
   var protocol = ( useHTTPS ? https : http )
-  var operation = retry.operation(self.retryOptions)
+  var operation = retry.operation(self._retryOptions)
   operation.attempt(function(count) {
     self.emit('attempt', listener.href, count)
     var options = parsedURLToRequestOptions(listener, useHTTPS)
@@ -93,7 +95,7 @@ prototype._sendDataToListener = function(dataCallback, listener, errback) {
 
 // Helper functionto iterate registered HTTP callback endpoints.
 prototype._forEachListener = function(callback) {
-  var listeners = this.listeners
+  var listeners = this._listeners
   Object.keys(listeners).forEach(function(href) {
     callback(listeners[href]) }) }
 
@@ -110,9 +112,9 @@ function parsedURLToRequestOptions(parsedURL, useHTTPS) {
 
 // Helper function to deregister an HTTP callback endpoint.
 prototype._deregister = function(href) {
-  delete this.listeners[href]
+  delete this._listeners[href]
   this.emit('deregistration', href) }
 
 // Returns an array of all HREFs of registered callback endpoints.
 prototype.callbackListeners = function() {
-  return Object.keys(this.listeners) }
+  return Object.keys(this._listeners) }
