@@ -69,11 +69,13 @@ prototype.send = function(dataCallback) {
 // to configuration and emitting events.
 prototype._sendDataToListener = function(dataCallback, listener, errback) {
   var self = this
-  var protocol = ( listener.protocol === 'https:' ? https : http )
+  var useHTTPS = ( listener.protocol === 'https:' )
+  var protocol = ( useHTTPS ? https : http )
   var operation = retry.operation(self.retryOptions)
   operation.attempt(function(count) {
     self.emit('attempt', listener.href, count)
-    var request = protocol.request(parsedURLToRequestOptions(listener))
+    var options = parsedURLToRequestOptions(listener, useHTTPS)
+    var request = protocol.request(options)
       .once('response', function() {
         // TODO treat error responses as failures
         self.emit('success', listener.href)
@@ -91,12 +93,12 @@ prototype._forEachListener = function(callback) {
 
 // Helper function to convert objects created with url.parse into options
 // arguments for http.request when sending callback requests.
-function parsedURLToRequestOptions(parsedURL) {
+function parsedURLToRequestOptions(parsedURL, useHTTPS) {
   return {
     auth: parsedURL.auth,
     host: parsedURL.hostname,
     method: 'POST',
-    path: ( parsedURL.pathname || '/' ),
+    path: ( parsedURL.pathname || ( useHTTPS ? 443 : 80 ) ),
     port: ( parsedURL.port || 80 ),
     query: parsedURL.query } }
 
