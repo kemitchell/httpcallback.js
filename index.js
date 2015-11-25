@@ -99,6 +99,7 @@ prototype._sendDataToListener = function(dataCallback, listener, errback) {
           errback(operation.mainError()) } })
     dataCallback(request) }) }
 
+// Helper function to check whether a callback request was successful.
 function successfulCallbackResponse(response) {
   var statusCode = response.statusCode
   return ( statusCode >= 200 && statusCode < 300) }
