@@ -15,27 +15,32 @@ inherits(HTTPCallback, EventEmitter)
 
 var prototype = HTTPCallback.prototype
 
-// TODO emit events
-
 prototype.handler = function(request, response) {
-    // TODO Check that the callback registration request comes from the same host as the hook target.
-    var listeners = this.listeners
-    request.pipe(concat(function(body) {
-      var parsed = url.parse(body.toString())
-      var href = parsed.href
-      var hasAllProperties = (
-        parsed.protocol &&
-        ( parsed.protocol === 'https:' || parsed.protocol === 'http:' ) &&
-        parsed.hostname )
-      if (hasAllProperties) {
-        // TODO log
-        listeners[href] = parsed
-        response.statusCode = 201
-        response.end() }
-      else {
-        response.statusCode = 400
-        response.end('Invalid URL') } })) }
-
+  // TODO Check that the callback registration request comes from the same host as the hook target.
+  var listeners = this.listeners
+  var emit = this.emit.bind(this)
+  request.pipe(concat(function(body) {
+    var parsedURL = Object.freeze(url.parse(body.toString()))
+    var href = parsedURL.href
+    var providedMinimumURLComponents = (
+      parsedURL.protocol &&
+      ( parsedURL.protocol === 'https:' ||
+        parsedURL.protocol === 'http:' ) &&
+      parsedURL.hostname )
+    if (providedMinimumURLComponents) {
+      // Store the provided callback.
+      listeners[href] = parsedURL
+      // Respond 201
+      response.statusCode = 201
+      response.end()
+      // Emit an event.
+      emit('registration', parsedURL) }
+    else {
+      // Respond 400.
+      response.statusCode = 400
+      response.end('Invalid URL')
+      // Emit an event.
+      emit('badrequest', parsedURL) } })) }
 
 prototype.send = function(callback) {
   var listeners = this.listeners

@@ -5,11 +5,16 @@ var tape = require('tape')
 var url = require('url')
 
 tape(function(test) {
-  test.plan(2)
+  test.plan(3)
   // The data to send from an event source server to an event listener server.
   var CALLBACK_DATA = 'callback body'
   // Create an event source server with an example HTTPCallback.
   var example = new HTTPCallback()
+  example
+    .on('registration', function(parsedURL) {
+      test.equal(
+        parsedURL.pathname, '/receive',
+        'callback emits registration event') })
   var source = http.createServer(
     function(request, response) {
       // The event source server proxies POST /register to the
