@@ -83,13 +83,25 @@ prototype._sendDataToListener = function(dataCallback, listener, errback) {
     self.emit('attempt', listener.href, count)
     var options = parsedURLToRequestOptions(listener, useHTTPS)
     var request = protocol.request(options)
-      .once('response', function() {
-        self.emit('success', listener.href)
-        errback() })
+      .once('response', function(response) {
+        if (successfulCallbackResponse(response)) {
+          self.emit('success', listener.href)
+          errback() }
+        else {
+          var message = (
+            'Unsuccessful request ' +
+            '(status code ' + response.statusCode + ')' )
+          var error = new Error(message)
+          if (!operation.retry(error)) {
+            errback(operation.mainError()) } } })
       .once('error', function(error) {
         if (!operation.retry(error)) {
           errback(operation.mainError()) } })
     dataCallback(request) }) }
+
+function successfulCallbackResponse(response) {
+  var statusCode = response.statusCode
+  return ( statusCode >= 200 && statusCode < 300) }
 
 // Helper functionto iterate registered HTTP callback endpoints.
 prototype._forEachListener = function(callback) {
