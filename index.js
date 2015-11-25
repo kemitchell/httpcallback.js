@@ -10,8 +10,14 @@ var url = require('url')
 
 function HTTPCallback(options) {
   options = ( options || {} )
+  // Options passed to `retry.optionation()` for each attempt to call back to
+  // registered HTTP endpoint. Endpoints that fail after retries are
+  // deregistered.
   this.retryOptions =  ( 'retry' in options ? options.retry : { } )
+  // A map from string from `url.parse(value).href` to object from
+  // `url.parse(value)` describing HTTP endpoints registered for callbacks.
   this.listeners = { }
+  // This is an EventEmitter.
   EventEmitter.call(this) }
 
 inherits(HTTPCallback, EventEmitter)
