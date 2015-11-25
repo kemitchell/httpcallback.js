@@ -1,9 +1,9 @@
 module.exports = HTTPCallback
 
-var http = require('http')
-var https = require('https')
 var EventEmitter = require('events').EventEmitter
 var concat = require('concat-stream')
+var http = require('http')
+var https = require('https')
 var inherits = require('util').inherits
 var url = require('url')
 
@@ -22,10 +22,10 @@ prototype.handler = function(request, response) {
   request.pipe(concat(function(body) {
     var parsedURL = Object.freeze(url.parse(body.toString()))
     var href = parsedURL.href
+    var protocol = parsedURL.protocol
     var providedMinimumURLComponents = (
-      parsedURL.protocol &&
-      ( parsedURL.protocol === 'https:' ||
-        parsedURL.protocol === 'http:' ) &&
+      protocol &&
+      ( protocol === 'https:' || protocol === 'http:' ) &&
       parsedURL.hostname )
     if (providedMinimumURLComponents) {
       // Store the provided callback.
@@ -50,10 +50,10 @@ prototype.send = function(callback) {
       var options = {
         auth: listener.auth,
         host: listener.hostname,
-        query: listener.query,
         method: 'POST',
+        path: ( listener.pathname || '/' ),
         port: ( listener.port || 80 ),
-        path: ( listener.pathname || '/' ) }
+        query: listener.query }
       var protocol = ( listener.protocol === 'https:' ? https : http )
       var request = protocol.request(
         options,
