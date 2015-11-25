@@ -37,7 +37,7 @@ prototype.handler = function(request, response) {
       // Store the provided callback.
       self._listeners[href] = parsedURL
       // Respond 201
-      response.statusCode = 201
+      response.statusCode = 202
       response.end()
       // Emit an event.
       self.emit('registration', parsedURL) }

@@ -104,8 +104,8 @@ tape(function(test) {
                   .request(post)
                   .once('response', function(response) {
                     test.equal(
-                      response.statusCode, 201,
-                      'POST /register to source responds 201 for good callback')
+                      response.statusCode, 202,
+                      'POST /register to source responds 202 for good callback')
                     done() })
                   .once('error', done)
                   // The body of the callback registration request to the event
@@ -117,8 +117,8 @@ tape(function(test) {
                   .request(post)
                   .once('response', function(response) {
                     test.equal(
-                      response.statusCode, 201,
-                      'POST /register to source responds 201 for bad callback')
+                      response.statusCode, 202,
+                      'POST /register to source responds 202 for bad callback')
                     done() })
                   .once('error', done)
                   // Register a bogus callback as well, to test error and
