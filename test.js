@@ -6,11 +6,12 @@ var tape = require('tape')
 var url = require('url')
 
 tape(function(test) {
-  test.plan(8)
+  test.plan(9)
   // The data to send from an event source server to an event listener server.
   var CALLBACK_DATA = 'callback body'
   var BAD_CALLBACK_PORT = 1
   var BAD_CALLBACK = ( 'http://localhost:' + BAD_CALLBACK_PORT + '/x' )
+  var listenerURL
   // Create an event source server with an example HTTPCallback.
   var example = new HTTPCallback()
   example
@@ -66,6 +67,10 @@ tape(function(test) {
                 asString, CALLBACK_DATA,
                 'listener receives data via POST /receive')
               response.end()
+              test.deepEqual(
+                example.callbackListeners(),
+                [ listenerURL ],
+                'only the listener remains listening')
               // Close our test servers.
               source.close()
               listener.close() })) }
@@ -77,6 +82,7 @@ tape(function(test) {
           // Record that random port, so we can tell the event source server
           // what port to call back on.
           var listenerPort = this.address().port
+          listenerURL =  ( 'http://localhost:' + listenerPort + '/receive')
           var post = {
             port: sourcePort,
             path: '/register',
@@ -92,7 +98,7 @@ tape(function(test) {
                 // The body of the callback registration request to the event
                 // source server is the plain-text URL of the source listener
                 // server where the event source server should POST data.
-                .end('http://localhost:' + listenerPort + '/receive') },
+                .end(listenerURL) },
               function(done) {
                 http.request(post, function(response) {
                   test.equal(

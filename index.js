@@ -78,3 +78,6 @@ prototype._parsedURLToRequestOptions = function(parsedURL) {
 prototype._deregister = function(href) {
   delete this.listeners[href]
   this.emit('deregistration', href) }
+
+prototype.callbackListeners = function() {
+  return Object.keys(this.listeners) }
