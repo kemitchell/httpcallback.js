@@ -5,9 +5,12 @@ var concat = require('concat-stream')
 var http = require('http')
 var https = require('https')
 var inherits = require('util').inherits
+var retry = require('retry')
 var url = require('url')
 
-function HTTPCallback() {
+function HTTPCallback(options) {
+  options = ( options || {} )
+  this.retryOptions =  ( 'retry' in options ? options.retry : { } )
   this.listeners = { }
   EventEmitter.call(this) }
 
@@ -46,20 +49,29 @@ prototype.validBody = function(parsedURL) {
     ( protocol === 'https:' || protocol === 'http:' ) &&
     parsedURL.hostname ) }
 
-prototype.send = function(callback) {
+prototype.send = function(dataCallback) {
   var self = this
   self._forEachListener(function(listener) {
-    var protocol = ( listener.protocol === 'https:' ? https : http )
-    var request = protocol.request(
-      self._parsedURLToRequestOptions(listener),
-      function() {
-        // TODO retry
+    self._sendDataToListener(dataCallback, listener, function(error) {
+      if (error) {
+        self.emit('failure', error)
+        self._deregister(listener.href) } }) }) }
+
+prototype._sendDataToListener = function(dataCallback, listener, errback) {
+  var self = this
+  var protocol = ( listener.protocol === 'https:' ? https : http )
+  var operation = retry.operation(self.retryOptions)
+  operation.attempt(function(count) {
+    self.emit('attempt', listener.href, count)
+    var request = protocol.request(self._parsedURLToRequestOptions(listener))
+      .once('response', function() {
         // TODO treat error responses as failures
-        return null })
-    request.on('error', function(error) {
-      self.emit('failure', error)
-      self._deregister(listener.href) })
-    callback(request) }) }
+        self.emit('success', listener.href)
+        errback() })
+      .once('error', function(error) {
+        if (!operation.retry(error)) {
+          errback(operation.mainError()) } })
+    dataCallback(request) }) }
 
 prototype._forEachListener = function(callback) {
   var listeners = this.listeners

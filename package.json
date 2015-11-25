@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
   "dependencies": {
-    "concat-stream": "^1.5.1"
+    "concat-stream": "^1.5.1",
+    "retry": "^0.8.0"
   },
   "devDependencies": {
     "async-series": "0.0.1",

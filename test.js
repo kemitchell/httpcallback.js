@@ -11,9 +11,17 @@ tape(function(test) {
   var CALLBACK_DATA = 'callback body'
   var BAD_CALLBACK_PORT = 1
   var BAD_CALLBACK = ( 'http://localhost:' + BAD_CALLBACK_PORT + '/x' )
+  var RETRY_INTERVAL = 500
   var listenerURL
   // Create an event source server with an example HTTPCallback.
-  var example = new HTTPCallback()
+  var example = new HTTPCallback(
+    // Configure automatic retry so the event source server will retry and
+    // deregister bad callbacks quickly.
+    { retry: {
+        maxTimeout: RETRY_INTERVAL,
+        minTimeout: RETRY_INTERVAL,
+        random: false,
+        retries: 0 } })
   example
     .once('registration', function(parsedURL) {
       test.equal(
@@ -67,13 +75,16 @@ tape(function(test) {
                 asString, CALLBACK_DATA,
                 'listener receives data via POST /receive')
               response.end()
-              test.deepEqual(
-                example.callbackListeners(),
-                [ listenerURL ],
-                'only the listener remains listening')
-              // Close our test servers.
-              source.close()
-              listener.close() })) }
+              setTimeout(
+                function() {
+                  test.deepEqual(
+                  example.callbackListeners(),
+                  [ listenerURL ],
+                  'only the listener remains listening')
+                  // Close our test servers.
+                  source.close()
+                  listener.close() },
+                RETRY_INTERVAL ) })) }
           // Otherwise it fails with an error.
           else {
              throw new Error() } })
