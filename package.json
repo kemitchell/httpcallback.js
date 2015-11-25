@@ -1,0 +1,17 @@
+{
+  "name": "httpcallback",
+  "description": "Webhook registration and response helper",
+  "version": "0.0.0",
+  "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
+  "dependencies": {
+    "concat-stream": "^1.5.1"
+  },
+  "devDependencies": {
+    "tape": "^4.2.2"
+  },
+  "license": "MIT",
+  "repository": "kemitchell/httpcallback.js",
+  "scripts": {
+    "test": "tape test.js"
+  }
+}
