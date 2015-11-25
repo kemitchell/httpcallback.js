@@ -22,9 +22,9 @@ prototype.handler = function(request, response) {
   // TODO Check that the callback registration request comes from the same host as the hook target.
   var self = this
   request.pipe(concat(function(body) {
-    var parsedURL = self.parseBody(body.toString())
+    var parsedURL = parseBody(body.toString())
     var href = parsedURL.href
-    if (self.validBody(parsedURL)) {
+    if (validBody(parsedURL)) {
       // Store the provided callback.
       self.listeners[href] = parsedURL
       // Respond 201
@@ -39,10 +39,10 @@ prototype.handler = function(request, response) {
       // Emit an event.
       self.emit('badrequest', parsedURL) } })) }
 
-prototype.parseBody = function(string) {
+function parseBody(string) {
   return Object.freeze(url.parse(string)) }
 
-prototype.validBody = function(parsedURL) {
+function validBody(parsedURL) {
   var protocol = parsedURL.protocol
   return (
     protocol &&
@@ -63,7 +63,7 @@ prototype._sendDataToListener = function(dataCallback, listener, errback) {
   var operation = retry.operation(self.retryOptions)
   operation.attempt(function(count) {
     self.emit('attempt', listener.href, count)
-    var request = protocol.request(self._parsedURLToRequestOptions(listener))
+    var request = protocol.request(parsedURLToRequestOptions(listener))
       .once('response', function() {
         // TODO treat error responses as failures
         self.emit('success', listener.href)
@@ -78,7 +78,7 @@ prototype._forEachListener = function(callback) {
   Object.keys(listeners).forEach(function(href) {
     callback(listeners[href]) }) }
 
-prototype._parsedURLToRequestOptions = function(parsedURL) {
+function parsedURLToRequestOptions(parsedURL) {
   return {
     auth: parsedURL.auth,
     host: parsedURL.hostname,
