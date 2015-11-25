@@ -17,55 +17,63 @@ var prototype = HTTPCallback.prototype
 
 prototype.handler = function(request, response) {
   // TODO Check that the callback registration request comes from the same host as the hook target.
-  var listeners = this.listeners
-  var emit = this.emit.bind(this)
+  var self = this
   request.pipe(concat(function(body) {
-    var parsedURL = Object.freeze(url.parse(body.toString()))
+    var parsedURL = self.parseBody(body.toString())
     var href = parsedURL.href
-    var protocol = parsedURL.protocol
-    var providedMinimumURLComponents = (
-      protocol &&
-      ( protocol === 'https:' || protocol === 'http:' ) &&
-      parsedURL.hostname )
-    if (providedMinimumURLComponents) {
+    if (self.validBody(parsedURL)) {
       // Store the provided callback.
-      listeners[href] = parsedURL
+      self.listeners[href] = parsedURL
       // Respond 201
       response.statusCode = 201
       response.end()
       // Emit an event.
-      emit('registration', parsedURL) }
+      self.emit('registration', parsedURL) }
     else {
       // Respond 400.
       response.statusCode = 400
       response.end('Invalid URL')
       // Emit an event.
-      emit('badrequest', parsedURL) } })) }
+      self.emit('badrequest', parsedURL) } })) }
+
+prototype.parseBody = function(string) {
+  return Object.freeze(url.parse(string)) }
+
+prototype.validBody = function(parsedURL) {
+  var protocol = parsedURL.protocol
+  return (
+    protocol &&
+    ( protocol === 'https:' || protocol === 'http:' ) &&
+    parsedURL.hostname ) }
 
 prototype.send = function(callback) {
-  var listeners = this.listeners
   var self = this
-  Object.keys(listeners)
-    .forEach(function(href) {
-      var listener = listeners[href]
-      var options = {
-        auth: listener.auth,
-        host: listener.hostname,
-        method: 'POST',
-        path: ( listener.pathname || '/' ),
-        port: ( listener.port || 80 ),
-        query: listener.query }
-      var protocol = ( listener.protocol === 'https:' ? https : http )
-      var request = protocol.request(
-        options,
-        function() {
-          // TODO retry
-          return null })
-      request
-        .on('error', function(error) {
-          self.emit('failure', error)
-          self._deregister(href) })
-      callback(request) }) }
+  self._forEachListener(function(listener) {
+    var protocol = ( listener.protocol === 'https:' ? https : http )
+    var request = protocol.request(
+      self._parsedURLToRequestOptions(listener),
+      function() {
+        // TODO retry
+        // TODO treat error responses as failures
+        return null })
+    request.on('error', function(error) {
+      self.emit('failure', error)
+      self._deregister(listener.href) })
+    callback(request) }) }
+
+prototype._forEachListener = function(callback) {
+  var listeners = this.listeners
+  Object.keys(listeners).forEach(function(href) {
+    callback(listeners[href]) }) }
+
+prototype._parsedURLToRequestOptions = function(parsedURL) {
+  return {
+    auth: parsedURL.auth,
+    host: parsedURL.hostname,
+    method: 'POST',
+    path: ( parsedURL.pathname || '/' ),
+    port: ( parsedURL.port || 80 ),
+    query: parsedURL.query } }
 
 prototype._deregister = function(href) {
   delete this.listeners[href]
