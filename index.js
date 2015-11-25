@@ -36,7 +36,7 @@ prototype.handler = function(request, response) {
     if (validBody(parsedURL)) {
       // Store the provided callback.
       self._listeners[href] = parsedURL
-      // Respond 201
+      // Respond 202.
       response.statusCode = 202
       response.end()
       // Emit an event.
