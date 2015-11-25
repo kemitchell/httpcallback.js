@@ -29,7 +29,6 @@ var prototype = HTTPCallback.prototype
 // An HTTP request handler that registers HTTP callback endpoints. Suitable for
 // use with the core Node.js HTTP module.
 prototype.handler = function(request, response) {
-  // TODO Check that the callback registration request comes from the same host as the hook target.
   var self = this
   request.pipe(concat(function(body) {
     var parsedURL = parseBody(body.toString())
@@ -85,7 +84,6 @@ prototype._sendDataToListener = function(dataCallback, listener, errback) {
     var options = parsedURLToRequestOptions(listener, useHTTPS)
     var request = protocol.request(options)
       .once('response', function() {
-        // TODO treat error responses as failures
         self.emit('success', listener.href)
         errback() })
       .once('error', function(error) {
