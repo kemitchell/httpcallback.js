@@ -100,26 +100,30 @@ tape(function(test) {
             method: 'POST' }
           series(
             [ function(done) {
-                http.request(post, function(response) {
-                  test.equal(
-                    response.statusCode, 201,
-                    'POST /register to source responds 201 for good callback')
-                  done() })
-                .on('error', done)
-                // The body of the callback registration request to the event
-                // source server is the plain-text URL of the source listener
-                // server where the event source server should POST data.
-                .end(listenerURL) },
+                http
+                  .request(post)
+                  .on('response', function(response) {
+                    test.equal(
+                      response.statusCode, 201,
+                      'POST /register to source responds 201 for good callback')
+                    done() })
+                  .on('error', done)
+                  // The body of the callback registration request to the event
+                  // source server is the plain-text URL of the source listener
+                  // server where the event source server should POST data.
+                  .end(listenerURL) },
               function(done) {
-                http.request(post, function(response) {
-                  test.equal(
-                    response.statusCode, 201,
-                    'POST /register to source responds 201 for bad callback')
-                  done() })
-                .on('error', done)
-                // Register a bogus callback as well, to test error and
-                // deregistration events.
-                .end(BAD_CALLBACK) },
+                http
+                  .request(post)
+                  .on('response', function(response) {
+                    test.equal(
+                      response.statusCode, 201,
+                      'POST /register to source responds 201 for bad callback')
+                    done() })
+                  .on('error', done)
+                  // Register a bogus callback as well, to test error and
+                  // deregistration events.
+                  .end(BAD_CALLBACK) },
               function() {
                 // Dispatch the callback data to all listeners registered with
                 // the event source server.
