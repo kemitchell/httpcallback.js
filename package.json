@@ -3,9 +3,6 @@
   "description": "Webhook registration and response helper",
   "version": "0.1.0",
   "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
-  "files": [
-    "index.js"
-  ],
   "dependencies": {
     "concat-stream": "^1.5.1",
     "retry": "^0.8.0"
@@ -15,10 +12,13 @@
     "standard": "^8.0.0",
     "tape": "^4.2.2"
   },
+  "files": [
+    "index.js"
+  ],
   "license": "MIT",
   "repository": "kemitchell/httpcallback.js",
   "scripts": {
-    "test": "tape test.js",
-    "lint": "standard"
+    "lint": "standard",
+    "test": "tape test.js"
   }
 }
