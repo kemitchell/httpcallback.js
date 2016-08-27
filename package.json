@@ -9,11 +9,13 @@
   },
   "devDependencies": {
     "async-series": "0.0.1",
+    "standard": "^8.0.0",
     "tape": "^4.2.2"
   },
   "license": "MIT",
   "repository": "kemitchell/httpcallback.js",
   "scripts": {
-    "test": "tape test.js"
+    "test": "tape test.js",
+    "lint": "standard"
   }
 }
