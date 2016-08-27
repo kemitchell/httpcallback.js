@@ -3,6 +3,9 @@
   "description": "Webhook registration and response helper",
   "version": "0.1.0",
   "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
+  "files": [
+    "index.js"
+  ],
   "dependencies": {
     "concat-stream": "^1.5.1",
     "retry": "^0.8.0"
