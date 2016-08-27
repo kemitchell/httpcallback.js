@@ -10,9 +10,9 @@ var url = require('url')
 
 function HTTPCallback (options) {
   options = options || {}
-  // Private object containing options passed to `retry.optionation()`
-  // for each attempt to call back to registered HTTP endpoint.
-  // Endpoints that fail after retries are deregistered.
+  // Private object containing options passed to `retry.operation()` for
+  // each attempt to call back to registered HTTP endpoint. Endpoints
+  // that fail after retries are deregistered.
   this._retryOptions = 'retry' in options ? options.retry : {}
 
   // Private object map from string from `url.parse(value).href` to
@@ -54,7 +54,7 @@ prototype.handler = function (request, response) {
 }
 
 // Helper function to parse HTTP request bodies sent to endpoints to
-// register callback URLS.
+// register callback URLs.
 function parseBody (string) {
   // Freeze the object, to prevent event listeners from mutating it.
   return Object.freeze(url.parse(string))
@@ -87,7 +87,9 @@ prototype.send = function (dataCallback) {
 
 // Helper function to call back to a specific HTTP endpoint, retrying
 // according to configuration and emitting events.
-prototype._sendDataToListener = function (dataCallback, listener, errback) {
+prototype._sendDataToListener = function (
+  dataCallback, listener, errback
+) {
   var self = this
   var useHTTPS = listener.protocol === 'https:'
   var protocol = useHTTPS ? https : http
@@ -126,7 +128,7 @@ function successfulCallbackResponse (response) {
   return statusCode >= 200 && statusCode < 300
 }
 
-// Helper functionto iterate registered HTTP callback endpoints.
+// Helper function to iterate registered HTTP callback endpoints.
 prototype._forEachListener = function (callback) {
   var listeners = this._listeners
   Object.keys(listeners).forEach(function (href) {
@@ -134,8 +136,8 @@ prototype._forEachListener = function (callback) {
   })
 }
 
-// Helper function to convert objects created with url.parse into
-// options arguments for http.request when sending callback requests.
+// Helper function to convert objects created with `url.parse` into
+// options arguments for `http.request` when sending callback requests.
 function parsedURLToRequestOptions (parsedURL, useHTTPS) {
   return {
     auth: parsedURL.auth,
